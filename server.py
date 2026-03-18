@@ -148,12 +148,18 @@ def get_log_stats(logs: list) -> dict:
     daily_counts = {}
     
     for entry in logs:
-        # Count actions
-        action_id = entry.get('action_id', 'unknown')
+        # Count actions - support both old (action_id) and new (selected_action.id) formats
+        action_id = entry.get('action_id')
+        if not action_id and 'selected_action' in entry:
+            action_id = entry.get('selected_action', {}).get('id', 'unknown')
+        action_id = action_id or 'unknown'
         action_counts[action_id] = action_counts.get(action_id, 0) + 1
         
-        # Count categories
-        category = entry.get('category', 'unknown')
+        # Count categories - support both old (category) and new (selected_action.type) formats
+        category = entry.get('category')
+        if not category and 'selected_action' in entry:
+            category = entry.get('selected_action', {}).get('type', 'unknown')
+        category = category or 'unknown'
         category_counts[category] = category_counts.get(category, 0) + 1
         
         # Count by hour
@@ -648,9 +654,19 @@ def render_logs_view(logs: list) -> str:
         except:
             time_str = ts[:19] if ts else 'unknown'
         
-        action_id = entry.get('action_id', 'unknown')
+        # Support both old and new log formats
+        action_id = entry.get('action_id')
         reason = entry.get('reason', '')
-        category = entry.get('category', 'unknown')
+        category = entry.get('category')
+        
+        if 'selected_action' in entry:
+            sa = entry.get('selected_action', {})
+            action_id = action_id or sa.get('id', 'unknown')
+            reason = reason or sa.get('reason', '')
+            category = category or sa.get('type', 'unknown')
+        
+        action_id = action_id or 'unknown'
+        category = category or 'unknown'
         
         # Color code by category
         cat_colors = {
@@ -686,11 +702,18 @@ def render_timeline_view(logs: list, tasks: dict) -> str:
     # Add log entries
     for entry in logs:
         ts = entry.get('timestamp', '')
+        # Support both old and new log formats
+        action_id = entry.get('action_id')
+        reason = entry.get('reason', '')
+        if 'selected_action' in entry:
+            sa = entry.get('selected_action', {})
+            action_id = action_id or sa.get('id', 'unknown')
+            reason = reason or sa.get('reason', '')
         events.append({
             'type': 'heartbeat',
             'timestamp': ts,
-            'action': entry.get('action_id', 'unknown'),
-            'reason': entry.get('reason', ''),
+            'action': action_id or 'unknown',
+            'reason': reason,
         })
     
     # Add completed tasks (today only)
