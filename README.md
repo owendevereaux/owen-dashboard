@@ -1,5 +1,8 @@
 # Owen Dashboard
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
+![No Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
+
 Unified visibility dashboard for Owen's tasks, heartbeat logs, and activity.
 
 ## Features
